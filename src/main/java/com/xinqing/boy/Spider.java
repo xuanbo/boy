@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,6 +40,11 @@ public class Spider {
      * 爬虫名
      */
     private String name;
+
+    /**
+     * 运行id
+     */
+    private String id;
 
     /**
      * 爬虫监听器
@@ -401,6 +407,7 @@ public class Spider {
     private void initSpider() {
         running.getAndSet(true);
         LOG.info("start spider at domain[{}].", domain == null ? "*" : domain);
+        spiderId();
         spiderName();
         toRequests(targetUrls).forEach(targetUrl -> scheduler.push(this, targetUrl));
         initListener();
@@ -416,6 +423,13 @@ public class Spider {
         if (name == null) {
             name = processor.getClass().getName();
         }
+    }
+
+    /**
+     * 爬虫id
+     */
+    private void spiderId() {
+        id = UUID.randomUUID().toString().replaceAll("-", "");
     }
 
     /**
@@ -613,6 +627,10 @@ public class Spider {
     /*-----------------------------------------------------------------
      *                            getters
      -----------------------------------------------------------------*/
+
+    public String getId() {
+        return id;
+    }
 
     public String getName() {
         return name;
