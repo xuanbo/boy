@@ -32,14 +32,20 @@ public class LocalSpiderListener implements SpiderListener {
      */
     private AtomicInteger errorCounter;
 
+    /**
+     * 爬虫名
+     */
+    private String name;
+
     public LocalSpiderListener(Scheduler scheduler) {
         this.scheduler = scheduler;
     }
 
     @Override
-    public void init() {
+    public void init(String name) {
         successCounter = new AtomicInteger();
         errorCounter = new AtomicInteger();
+        this.name = name;
     }
 
     @Override
@@ -54,7 +60,7 @@ public class LocalSpiderListener implements SpiderListener {
 
     @Override
     public void onComplete() {
-        LOG.info("spider report: total({}), success({}), error({})", scheduler.getTotal(), successCounter.get(), errorCounter.get());
+        LOG.info("spider[{}] report: total({}), success({}), error({})", name, scheduler.getTotal(), successCounter.get(), errorCounter.get());
     }
 
     @Override

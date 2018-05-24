@@ -12,8 +12,10 @@ public interface SpiderListener {
 
     /**
      * 初始化
+     *
+     * @param name 爬虫名
      */
-    void init();
+    void init(String name);
 
     /**
      * 请求成功

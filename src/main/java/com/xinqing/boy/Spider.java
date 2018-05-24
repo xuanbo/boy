@@ -15,9 +15,6 @@ import com.xinqing.boy.util.UrlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -37,6 +34,11 @@ import java.util.stream.Collectors;
 public class Spider {
     
     private static final Logger LOG = LoggerFactory.getLogger(Spider.class);
+
+    /**
+     * 爬虫名
+     */
+    private String name;
 
     /**
      * 爬虫监听器
@@ -135,6 +137,18 @@ public class Spider {
      */
     public static Spider create(Processor processor) {
         return new Spider(processor);
+    }
+
+    /**
+     * 设置爬虫名
+     *
+     * @param name 爬虫名称
+     * @return Spider
+     */
+    public Spider name(String name) {
+        checkIfRunning();
+        this.name = name;
+        return this;
     }
 
     /**
@@ -387,11 +401,21 @@ public class Spider {
     private void initSpider() {
         running.getAndSet(true);
         LOG.info("start spider at domain[{}].", domain == null ? "*" : domain);
+        spiderName();
         toRequests(targetUrls).forEach(scheduler::push);
         initListener();
         sortMiddlewares();
         sortPipelines();
         initThreadPool();
+    }
+
+    /**
+     * 初始化爬虫名称
+     */
+    private void spiderName() {
+        if (name == null) {
+            name = processor.getClass().getName();
+        }
     }
 
     /**
@@ -421,7 +445,7 @@ public class Spider {
         if (listeners.isEmpty()) {
             listeners.add(new LocalSpiderListener(scheduler));
         }
-        listeners.forEach(SpiderListener::init);
+        listeners.forEach(listener -> listener.init(name));
     }
 
     /**
