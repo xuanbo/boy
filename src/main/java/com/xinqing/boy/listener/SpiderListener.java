@@ -1,6 +1,7 @@
 package com.xinqing.boy.listener;
 
 import com.xinqing.boy.Request;
+import com.xinqing.boy.Spider;
 
 /**
  * 爬虫监听
@@ -13,32 +14,38 @@ public interface SpiderListener {
     /**
      * 初始化
      *
-     * @param name 爬虫名
+     * @param spider 爬虫
      */
-    void init(String name);
+    void init(Spider spider);
 
     /**
      * 请求成功
      *
+     * @param spider 爬虫
      * @param request Request
      */
-    void onSuccess(Request request);
+    void onSuccess(Spider spider, Request request);
 
     /**
      * 请求失败
      *
+     * @param spider 爬虫
      * @param request Request
      */
-    void onError(Request request);
+    void onError(Spider spider, Request request);
 
     /**
      * 完成
+     *
+     * @param spider 爬虫
      */
-    void onComplete();
+    void onComplete(Spider spider);
 
     /**
      * 销毁
+     *
+     * @param spider 爬虫
      */
-    void destroy();
+    void destroy(Spider spider);
 
 }

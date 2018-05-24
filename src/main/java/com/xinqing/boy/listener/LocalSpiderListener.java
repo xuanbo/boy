@@ -1,6 +1,7 @@
 package com.xinqing.boy.listener;
 
 import com.xinqing.boy.Request;
+import com.xinqing.boy.Spider;
 import com.xinqing.boy.scheduler.Scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,39 +33,33 @@ public class LocalSpiderListener implements SpiderListener {
      */
     private AtomicInteger errorCounter;
 
-    /**
-     * 爬虫名
-     */
-    private String name;
-
     public LocalSpiderListener(Scheduler scheduler) {
         this.scheduler = scheduler;
     }
 
     @Override
-    public void init(String name) {
+    public void init(Spider spider) {
         successCounter = new AtomicInteger();
         errorCounter = new AtomicInteger();
-        this.name = name;
     }
 
     @Override
-    public void onSuccess(Request request) {
+    public void onSuccess(Spider spider, Request request) {
         successCounter.incrementAndGet();
     }
 
     @Override
-    public void onError(Request request) {
+    public void onError(Spider spider, Request request) {
         errorCounter.incrementAndGet();
     }
 
     @Override
-    public void onComplete() {
-        LOG.info("spider[{}] report: total({}), success({}), error({})", name, scheduler.getTotal(), successCounter.get(), errorCounter.get());
+    public void onComplete(Spider spider) {
+        LOG.info("spider[{}] report: total({}), success({}), error({})", spider.getName(), scheduler.getTotal(spider), successCounter.get(), errorCounter.get());
     }
 
     @Override
-    public void destroy() {
+    public void destroy(Spider spider) {
         successCounter = null;
         errorCounter = null;
     }

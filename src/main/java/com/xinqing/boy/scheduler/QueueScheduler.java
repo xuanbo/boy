@@ -1,6 +1,7 @@
 package com.xinqing.boy.scheduler;
 
 import com.xinqing.boy.Request;
+import com.xinqing.boy.Spider;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -19,17 +20,17 @@ public class QueueScheduler extends DuplicateScheduler {
     private Queue<Request> queue = new LinkedBlockingQueue<>();
 
     @Override
-    public Request get() {
+    public Request get(Spider spider) {
         return queue.poll();
     }
 
     @Override
-    public int getLeft() {
+    public int getLeft(Spider spider) {
         return queue.size();
     }
 
     @Override
-    protected void pushWhenNoDuplicate(Request request) {
+    protected void pushWhenNoDuplicate(Spider spider, Request request) {
         queue.add(request);
     }
 

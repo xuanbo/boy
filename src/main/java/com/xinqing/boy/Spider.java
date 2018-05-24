@@ -356,7 +356,7 @@ public class Spider {
         checkIfRunning();
         initSpider();
         while (running.get()) {
-            Request request = scheduler.get();
+            Request request = scheduler.get(this);
             if (request == null) {
                 if (poolExecutor.getActiveCount() == 0) {
                     break;
@@ -402,7 +402,7 @@ public class Spider {
         running.getAndSet(true);
         LOG.info("start spider at domain[{}].", domain == null ? "*" : domain);
         spiderName();
-        toRequests(targetUrls).forEach(scheduler::push);
+        toRequests(targetUrls).forEach(targetUrl -> scheduler.push(this, targetUrl));
         initListener();
         sortMiddlewares();
         sortPipelines();
@@ -445,7 +445,7 @@ public class Spider {
         if (listeners.isEmpty()) {
             listeners.add(new LocalSpiderListener(scheduler));
         }
-        listeners.forEach(listener -> listener.init(name));
+        listeners.forEach(listener -> listener.init(this));
     }
 
     /**
@@ -525,7 +525,7 @@ public class Spider {
         response.setUrl(request.getUrl());
         if (response.isSuccess()) {
             // 监听器
-            listeners.forEach(listener -> listener.onSuccess(request));
+            listeners.forEach(listener -> listener.onSuccess(this, request));
             // 解析
             Result result = processor.parse(response);
             if (result == null) {
@@ -534,7 +534,7 @@ public class Spider {
             } else {
                 LOG.info("download {}[{}] success.", request.getUrl(), response.getStatusCode());
             }
-            toRequests(result.getNextUrls()).forEach(scheduler::push);
+            toRequests(result.getNextUrls()).forEach(nextUrl -> scheduler.push(this, nextUrl));
             // 管道
             pipelines.forEach(pipeline -> pipeline.process(result.getItem()));
             // 请求等待
@@ -542,7 +542,7 @@ public class Spider {
         } else {
             LOG.warn("download {}[{}] error", request.getUrl(), response.getStatusCode());
             // 监听器
-            listeners.forEach(listener -> listener.onError(request));
+            listeners.forEach(listener -> listener.onError(this, request));
             // 重试
             retryRequest(request);
         }
@@ -582,7 +582,7 @@ public class Spider {
         if (retryTime < retryNum) {
             retryTime++;
             request.setRetryTime(retryTime);
-            scheduler.push(request);
+            scheduler.push(this, request);
         }
     }
 
@@ -604,8 +604,85 @@ public class Spider {
     private void close() {
         poolExecutor.shutdown();
         running.getAndSet(false);
-        listeners.forEach(SpiderListener::onComplete);
-        listeners.forEach(SpiderListener::destroy);
+        listeners.forEach(listener -> listener.onComplete(this));
+        listeners.forEach(listener -> listener.destroy(this));
         LOG.info("spider stop.");
+    }
+
+
+    /*-----------------------------------------------------------------
+     *                            getters
+     -----------------------------------------------------------------*/
+
+    public String getName() {
+        return name;
+    }
+
+    public List<SpiderListener> getListeners() {
+        return listeners;
+    }
+
+    public Downloader getDownloader() {
+        return downloader;
+    }
+
+    public Processor getProcessor() {
+        return processor;
+    }
+
+    public List<Middleware> getMiddlewares() {
+        return middlewares;
+    }
+
+    public List<Pipeline> getPipelines() {
+        return pipelines;
+    }
+
+    public Scheduler getScheduler() {
+        return scheduler;
+    }
+
+    public List<String> getTargetUrls() {
+        return targetUrls;
+    }
+
+    public ThreadPoolExecutor getPoolExecutor() {
+        return poolExecutor;
+    }
+
+    public int getThreadNum() {
+        return threadNum;
+    }
+
+    public int getQueueSize() {
+        return queueSize;
+    }
+
+    public AtomicBoolean getRunning() {
+        return running;
+    }
+
+    public int getWaitNewUrlSeconds() {
+        return waitNewUrlSeconds;
+    }
+
+    public ReentrantLock getNewUrlLock() {
+        return newUrlLock;
+    }
+
+    public Condition getNewUrlCondition() {
+        return newUrlCondition;
+    }
+
+    public int getRetryNum() {
+        return retryNum;
+    }
+
+    public int getSleepMilliseconds() {
+        return sleepMilliseconds;
+    }
+
+    public String getDomain() {
+        return domain;
     }
 }
