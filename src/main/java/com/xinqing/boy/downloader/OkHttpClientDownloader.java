@@ -91,7 +91,6 @@ public class OkHttpClientDownloader implements Downloader {
         if (body != null) {
             byte[] bytes = body.bytes();
             response.setRawBytes(bytes);
-            response.setRawText(new String(bytes));
         }
         return response;
     }

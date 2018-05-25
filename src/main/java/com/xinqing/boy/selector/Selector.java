@@ -4,6 +4,8 @@ import com.xinqing.boy.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
+import java.nio.charset.Charset;
+
 /**
  * 选择器
  *
@@ -19,7 +21,18 @@ public class Selector {
      * @return Element
      */
     public static Document jsoup(Response response) {
-        return Jsoup.parse(response.getRawText());
+        return Jsoup.parse(new String(response.getRawBytes()));
+    }
+
+    /**
+     * 获取Jsoup
+     *
+     * @param response Response
+     * @param charset Charset
+     * @return Element
+     */
+    public static Document jsoup(Response response, Charset charset) {
+        return Jsoup.parse(new String(response.getRawBytes(), charset));
     }
 
 }

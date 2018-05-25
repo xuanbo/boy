@@ -44,11 +44,6 @@ public class Response {
     private byte[] rawBytes;
 
     /**
-     * 原始响应字符
-     */
-    private String rawText;
-
-    /**
      * 响应头
      */
     private Map<String, List<String>> headers;
@@ -115,14 +110,6 @@ public class Response {
 
     public void setRawBytes(byte[] rawBytes) {
         this.rawBytes = rawBytes;
-    }
-
-    public String getRawText() {
-        return rawText;
-    }
-
-    public void setRawText(String rawText) {
-        this.rawText = rawText;
     }
 
     public Map<String, List<String>> getHeaders() {
