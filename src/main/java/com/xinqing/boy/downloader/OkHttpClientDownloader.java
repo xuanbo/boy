@@ -2,6 +2,7 @@ package com.xinqing.boy.downloader;
 
 import com.xinqing.boy.Request;
 import com.xinqing.boy.Response;
+import com.xinqing.boy.util.CollectionUtil;
 import okhttp3.Call;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +46,7 @@ public class OkHttpClientDownloader implements Downloader {
         try {
             okhttp3.Response resp = call.execute();
             response = handleResponse(resp);
+            addCallbackAndProps(request, response);
         } catch (IOException e) {
             LOG.warn("request {} error", request.getUrl(), e);
         }
@@ -92,4 +95,17 @@ public class OkHttpClientDownloader implements Downloader {
         }
         return response;
     }
+
+    /**
+     * 添加回调、参数到响应
+     *
+     * @param request Request
+     * @param response Response
+     */
+    private void addCallbackAndProps(Request request, Response response) {
+        response.setCallback(request.getCallback());
+        Map<String, Object> props = request.getProps();
+        response.setProps(CollectionUtil.isEmpty(props) ? Collections.emptyMap() : props);
+    }
+
 }

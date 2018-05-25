@@ -9,6 +9,7 @@ import com.xinqing.boy.pipeline.Pipeline;
 import com.xinqing.boy.processor.Processor;
 import com.xinqing.boy.scheduler.QueueScheduler;
 import com.xinqing.boy.scheduler.Scheduler;
+import com.xinqing.boy.util.CollectionUtil;
 import com.xinqing.boy.util.DefaultThreadFactory;
 import com.xinqing.boy.util.StandardThreadExecutor;
 import com.xinqing.boy.util.UrlUtil;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -406,10 +408,10 @@ public class Spider {
      */
     private void initSpider() {
         running.getAndSet(true);
-        LOG.info("start spider at domain[{}].", domain == null ? "*" : domain);
-        spiderId();
         spiderName();
-        toRequests(targetUrls).forEach(targetUrl -> scheduler.push(this, targetUrl));
+        spiderId();
+        LOG.info("start spider[{}] at domain[{}].", name + "@" + id, domain == null ? "*" : domain);
+        toRequests(targetUrls).forEach(req -> scheduler.push(this, req));
         initListener();
         sortMiddlewares();
         sortPipelines();
@@ -433,23 +435,27 @@ public class Spider {
     }
 
     /**
-     * 将开始url转化为请求
+     * urls转化为请求
      *
-     * @param targetUrl 开始url
-     * @return Request
-     */
-    private Request toRequest(String targetUrl) {
-        return new Request(targetUrl);
-    }
-
-    /**
-     * 将开始urls转化为请求
-     *
-     * @param targetUrls 开始urls
+     * @param targetUrls 请求urls
      * @return List<Request>
      */
     private List<Request> toRequests(List<String> targetUrls) {
-        return targetUrls.stream().map(Request::new).collect(Collectors.toList());
+        return targetUrls.stream().map(this::toRequest).collect(Collectors.toList());
+    }
+
+    /**
+     * url转化为请求
+     *
+     * @param targetUrl 请求url
+     * @return Request
+     */
+    private Request toRequest(String targetUrl) {
+        Request request = new Request();
+        request.setUrl(targetUrl);
+        request.setCallback(processor);
+        request.setProps(null);
+        return request;
     }
 
     /**
@@ -541,16 +547,19 @@ public class Spider {
             // 监听器
             listeners.forEach(listener -> listener.onSuccess(this, request));
             // 解析
-            Result result = processor.parse(response);
+            Result result = response.getCallback().parse(response);
             if (result == null) {
                 LOG.info("download {}[{}] success, result is None.", request.getUrl(), response.getStatusCode());
                 return;
             } else {
                 LOG.info("download {}[{}] success.", request.getUrl(), response.getStatusCode());
             }
-            toRequests(result.getNextUrls()).forEach(nextUrl -> scheduler.push(this, nextUrl));
+            result.toRequests().forEach(req -> scheduler.push(this, req));
             // 管道
-            pipelines.forEach(pipeline -> pipeline.process(result.getItem()));
+            Item item = result.getItem();
+            if (item != null) {
+                pipelines.forEach(pipeline -> pipeline.process(item));
+            }
             // 请求等待
             requestSleep();
         } else {

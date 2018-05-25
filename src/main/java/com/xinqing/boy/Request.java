@@ -1,5 +1,7 @@
 package com.xinqing.boy;
 
+import com.xinqing.boy.processor.Processor;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,6 +58,16 @@ public class Request {
      */
     private int retryTime;
 
+    /**
+     * 下次请求url回调
+     */
+    private Processor callback;
+
+    /**
+     * 回调传递参数
+     */
+    private Map<String, Object> props;
+
     public Request() {
     }
 
@@ -103,4 +115,19 @@ public class Request {
         this.retryTime = retryTime;
     }
 
+    public Processor getCallback() {
+        return callback;
+    }
+
+    public void setCallback(Processor callback) {
+        this.callback = callback;
+    }
+
+    public Map<String, Object> getProps() {
+        return props;
+    }
+
+    public void setProps(Map<String, Object> props) {
+        this.props = props;
+    }
 }

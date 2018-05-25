@@ -1,5 +1,7 @@
 package com.xinqing.boy;
 
+import com.xinqing.boy.processor.Processor;
+
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +52,16 @@ public class Response {
      * 响应头
      */
     private Map<String, List<String>> headers;
+
+    /**
+     * 回调
+     */
+    private Processor callback;
+
+    /**
+     * 传递给回调的参数
+     */
+    private Map<String, Object> props;
 
     public Response() {
     }
@@ -121,4 +133,19 @@ public class Response {
         this.headers = headers;
     }
 
+    public Processor getCallback() {
+        return callback;
+    }
+
+    public void setCallback(Processor callback) {
+        this.callback = callback;
+    }
+
+    public Map<String, Object> getProps() {
+        return props;
+    }
+
+    public void setProps(Map<String, Object> props) {
+        this.props = props;
+    }
 }

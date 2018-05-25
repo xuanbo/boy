@@ -2,7 +2,7 @@ package com.xinqing.boy.selector;
 
 import com.xinqing.boy.Response;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Document;
 
 /**
  * 选择器
@@ -18,7 +18,7 @@ public class Selector {
      * @param response Response
      * @return Element
      */
-    public static Element jsoup(Response response) {
+    public static Document jsoup(Response response) {
         return Jsoup.parse(response.getRawText());
     }
 

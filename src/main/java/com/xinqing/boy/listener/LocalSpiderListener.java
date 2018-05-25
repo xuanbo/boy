@@ -55,7 +55,7 @@ public class LocalSpiderListener implements SpiderListener {
 
     @Override
     public void onComplete(Spider spider) {
-        LOG.info("spider[{}] report: total({}), success({}), error({})", spider.getName(), scheduler.getTotal(spider), successCounter.get(), errorCounter.get());
+        LOG.info("spider[{}] report: total({}), success({}), error({})", spider.getName() + "@" + spider.getId(), scheduler.getTotal(spider), successCounter.get(), errorCounter.get());
     }
 
     @Override
