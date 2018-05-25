@@ -5,6 +5,7 @@ import com.xinqing.boy.downloader.OkHttpClientDownloader;
 import com.xinqing.boy.listener.LocalSpiderListener;
 import com.xinqing.boy.listener.SpiderListener;
 import com.xinqing.boy.middleware.Middleware;
+import com.xinqing.boy.pipeline.ConsolePipeline;
 import com.xinqing.boy.pipeline.Pipeline;
 import com.xinqing.boy.processor.Processor;
 import com.xinqing.boy.scheduler.QueueScheduler;
@@ -17,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -56,7 +56,7 @@ public class Spider {
     /**
      * 下载器
      */
-    private Downloader downloader = new OkHttpClientDownloader();
+    private Downloader downloader;
 
     /**
      * 处理器
@@ -76,7 +76,7 @@ public class Spider {
     /**
      * 调度器
      */
-    private Scheduler scheduler = new QueueScheduler();
+    private Scheduler scheduler;
 
     /**
      * 开始url
@@ -411,11 +411,13 @@ public class Spider {
         spiderName();
         spiderId();
         LOG.info("start spider[{}] at domain[{}].", name + "@" + id, domain == null ? "*" : domain);
-        toRequests(targetUrls).forEach(req -> scheduler.push(this, req));
+        initScheduler();
+        initDownloader();
         initListener();
         sortMiddlewares();
         sortPipelines();
         initThreadPool();
+        initRequests();
     }
 
     /**
@@ -432,6 +434,83 @@ public class Spider {
      */
     private void spiderId() {
         id = UUID.randomUUID().toString().replaceAll("-", "");
+    }
+
+    /**
+     * 初始化调度器
+     */
+    private void initScheduler() {
+        if (scheduler == null) {
+            scheduler = new QueueScheduler();
+        }
+    }
+
+    /**
+     * 初始化下载器
+     */
+    private void initDownloader() {
+        if (downloader == null) {
+            downloader = new OkHttpClientDownloader();
+        }
+    }
+
+    /**
+     * 初始化监听器
+     */
+    private void initListener() {
+        if (CollectionUtil.isEmpty(listeners)) {
+            listeners.add(new LocalSpiderListener(scheduler));
+        }
+        LOG.info("listeners:[");
+        listeners.forEach(listener -> LOG.info("{}", listener.getClass().getName()));
+        LOG.info("]");
+        listeners.forEach(listener -> listener.init(this));
+    }
+
+    /**
+     * 排序中间件
+     */
+    private void sortMiddlewares() {
+        if (CollectionUtil.isEmpty(middlewares)) {
+            LOG.warn("no middlewares!!!");
+        } else {
+            // sort pipeline
+            middlewares.sort(Comparator.comparing(Middleware::order));
+            LOG.info("middlewares:[");
+            middlewares.forEach(middleware -> LOG.info("{}", middleware.getClass().getName()));
+            LOG.info("]");
+        }
+    }
+
+    /**
+     * 排序管道
+     */
+    private void sortPipelines() {
+        if (CollectionUtil.isEmpty(pipelines)) {
+            pipelines.add(new ConsolePipeline());
+        }
+        // sort pipeline
+        pipelines.sort(Comparator.comparing(Pipeline::order));
+        LOG.info("pipelines:[");
+        pipelines.forEach(pipeline -> LOG.info("{}", pipeline.getClass().getName()));
+        LOG.info("]");
+    }
+
+    /**
+     * 初始化线程池
+     */
+    private void initThreadPool() {
+        if (poolExecutor == null) {
+            poolExecutor = new StandardThreadExecutor(threadNum, threadNum, 3, TimeUnit.SECONDS, queueSize,
+                    new DefaultThreadFactory("spider", true), new ThreadPoolExecutor.CallerRunsPolicy());
+        }
+    }
+
+    /**
+     * 初始化请求
+     */
+    private void initRequests() {
+        toRequests(targetUrls).forEach(req -> scheduler.push(this, req));
     }
 
     /**
@@ -456,63 +535,6 @@ public class Spider {
         request.setCallback(processor);
         request.setProps(null);
         return request;
-    }
-
-    /**
-     * 初始化监听器
-     */
-    private void initListener() {
-        if (CollectionUtil.isEmpty(listeners)) {
-            LOG.warn("no listeners!!!");
-        } else {
-            LOG.info("listeners:");
-            LOG.info("[");
-            listeners.forEach(listener -> LOG.info("{}", listener.getClass().getName()));
-            LOG.info("]");
-            listeners.forEach(listener -> listener.init(this));
-        }
-    }
-
-    /**
-     * 排序中间件
-     */
-    private void sortMiddlewares() {
-        if (CollectionUtil.isEmpty(middlewares)) {
-            LOG.warn("no middlewares!!!");
-        } else {
-            // sort pipeline
-            middlewares.sort(Comparator.comparing(Middleware::order));
-            LOG.info("middlewares:");
-            LOG.info("[");
-            middlewares.forEach(middleware -> LOG.info("{}", middleware.getClass().getName()));
-            LOG.info("]");
-        }
-    }
-
-    /**
-     * 排序管道
-     */
-    private void sortPipelines() {
-        if (CollectionUtil.isEmpty(pipelines)) {
-            LOG.warn("no pipelines!!!");
-        } else {
-            // sort pipeline
-            pipelines.sort(Comparator.comparing(Pipeline::order));
-            LOG.info("pipelines:");
-            LOG.info("[");
-            pipelines.forEach(pipeline -> LOG.info("{}", pipeline.getClass().getName()));
-            LOG.info("]");
-        }
-    }
-
-    /**
-     * 初始化线程池
-     */
-    private void initThreadPool() {
-        if (poolExecutor == null) {
-            poolExecutor = new StandardThreadExecutor(threadNum, threadNum, 3, TimeUnit.SECONDS, queueSize,
-                    new DefaultThreadFactory("spider", true), new ThreadPoolExecutor.CallerRunsPolicy());
-        }
     }
 
     /**
