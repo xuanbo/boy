@@ -53,7 +53,14 @@ public class TextPipeline implements Pipeline {
         return order;
     }
 
-    private void append(FileWriter writer, Item item) throws IOException {
+    /**
+     * 追加item到文件
+     *
+     * @param writer FileWriter
+     * @param item Item
+     * @throws IOException io异常
+     */
+    protected void append(FileWriter writer, Item item) throws IOException {
         for (Map.Entry<String, Object> entry : item.getAll().entrySet()) {
             writer.append(entry.getKey()).append(":").append("\r\n");
             writer.append(entry.getValue().toString()).append("\r\n");
