@@ -462,17 +462,22 @@ public class Spider {
      * 初始化监听器
      */
     private void initListener() {
-        if (listeners.isEmpty()) {
-            listeners.add(new LocalSpiderListener(scheduler));
+        if (CollectionUtil.isEmpty(listeners)) {
+            LOG.warn("no listeners!!!");
+        } else {
+            LOG.info("listeners:");
+            LOG.info("[");
+            listeners.forEach(listener -> LOG.info("{}", listener.getClass().getName()));
+            LOG.info("]");
+            listeners.forEach(listener -> listener.init(this));
         }
-        listeners.forEach(listener -> listener.init(this));
     }
 
     /**
      * 排序中间件
      */
     private void sortMiddlewares() {
-        if (middlewares.isEmpty()) {
+        if (CollectionUtil.isEmpty(middlewares)) {
             LOG.warn("no middlewares!!!");
         } else {
             // sort pipeline
@@ -488,7 +493,7 @@ public class Spider {
      * 排序管道
      */
     private void sortPipelines() {
-        if (pipelines.isEmpty()) {
+        if (CollectionUtil.isEmpty(pipelines)) {
             LOG.warn("no pipelines!!!");
         } else {
             // sort pipeline
