@@ -2,6 +2,12 @@
 
 [webmagic](https://github.com/code4craft/webmagic)项目的一个山寨版，供于学习。
 
+## 模块
+
+* `boy-core`: 爬虫核心
+* `boy-lettuce`: 基于lettuce客户端访问redis，实现分布式。
+* `boy-example`: 例子
+
 ## 对比webmagic
 
 * Downloader组件
@@ -46,7 +52,7 @@ public class GithubProcessor extends AbstractProcessor {
 
 }
 
-class GithubRepositoryProcessor extends AbstractProcessor {
+public class GithubRepositoryProcessor extends AbstractProcessor {
 
     @Override
     protected void doParse(Response response) {
@@ -84,6 +90,36 @@ public class GithubProcessorTest {
 
 }
 ```
+
+### 基于redis分布式
+
+只需要替换默认的`QueueScheduler`即可。
+
+```java
+public class GithubProcessorTest {
+
+    @Test
+    public void run() {
+        // Redis Scheduler
+        RedisClient client = RedisClient.create("redis://localhost/");
+        RedisListScheduler scheduler = new RedisListScheduler(client);
+
+        Spider.create(new GithubProcessor())
+                .domain("github.com")
+                .addTargetUrl("https://github.com/xuanbo")
+                .addPipeline(new TextPipeline("D:\\developer\\Code\\boy\\github.txt"))
+                // 采用RedisListScheduler替换默认的QueueScheduler
+                .setScheduler(scheduler)
+                .thread(5)
+                .retry(1)
+                .sleep(500)
+                .run();
+    }
+
+}
+```
+
+基于redis的set去除重复url、list存储待处理url。其中缓存前缀为：`boy:all`和`boy:queue`
 
 ## why boy project？
 
